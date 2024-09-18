@@ -1,10 +1,13 @@
 import express from 'express'
 import cors from 'cors'
+import MenuRoute from './routes/menuRoute'
 
 const PORT: number = 8000
 const app = express()
 app.use(cors())
 
+app.use('/menu', MenuRoute)
+
 app.listen(PORT, () => {
-    console.log(`[server]: server is running on Port 8000`)
-})  
+    console.log(`[server]: Server is running at http://localhost:${PORT}`)
+})

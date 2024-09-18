@@ -48,7 +48,7 @@ model User {
   orderDetail     Order[]
 }
 
-model Menu {
+model menu {
   id          Int          @id @default(autoincrement())
   uuid        String       @default("")
   name        String       @default("")
@@ -78,7 +78,7 @@ model Order_List {
   idOrder  Int?
   order    Order? @relation(fields: [idOrder], references: [id])
   idMenu   Int?
-  menu     Menu?  @relation(fields: [idMenu], references: [id])
+  menu     menu?  @relation(fields: [idMenu], references: [id])
   quantity Int    @default(0)
   note     String @default("") @db.Text
 }
