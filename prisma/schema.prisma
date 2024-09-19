@@ -56,6 +56,8 @@ model menu {
   category    Category     @default(Food)
   picture     String       @default("")
   description String       @default("") @db.Text
+  createdAt   DateTime     @default(now())
+  updateAt    DateTime     @updatedAt
   orderList   Order_List[]
 }
 

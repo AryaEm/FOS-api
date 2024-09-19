@@ -1,6 +1,7 @@
 import { Request, Response } from "express"; //untuk mengimport express
 import { PrismaClient } from "@prisma/client";
 import { v4 as uuidv4 } from "uuid";
+import { request } from "http";
 
 const prisma = new PrismaClient({ errorFormat: "pretty" });
 
@@ -20,6 +21,32 @@ export const getAllMenus = async (req: Request, res: Response) => {
             .json({
                 status: false,
                 message: `Error bang ${error}`
+            })
+            .status(400)
+    }
+}
+
+export const createMenu = async (req: Request, res: Response) => {
+    try {
+        //mengambil data
+        const { name, price, category, description } = req.body
+        const uuid = uuidv4()
+
+        //proses save data
+        const newMenu = await prisma.menu.create({
+            data: { uuid, name, price: Number(price), category, description }
+        })
+
+        return res.json({
+            status: true,
+            data: newMenu,
+            message: 'New menu has created'
+        }).status(200)
+    } catch (error) {
+        return res
+            .json({
+                status: false,
+                message: `error lee ${error}`
             })
             .status(400)
     }
