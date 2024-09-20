@@ -71,16 +71,20 @@ model Order {
   idUser         Int?
   user           User?          @relation(fields: [idUser], references: [id])
   status         Status         @default(New)
+  createdAt      DateTime       @default(now())
+  updateAt       DateTime       @updatedAt
   orderList      Order_List[]
 }
 
 model Order_List {
-  id       Int    @id @default(autoincrement())
-  uuid     String @default("")
-  idOrder  Int?
-  order    Order? @relation(fields: [idOrder], references: [id])
-  idMenu   Int?
-  menu     menu?  @relation(fields: [idMenu], references: [id])
-  quantity Int    @default(0)
-  note     String @default("") @db.Text
+  id        Int      @id @default(autoincrement())
+  uuid      String   @default("")
+  idOrder   Int?
+  order     Order?   @relation(fields: [idOrder], references: [id])
+  idMenu    Int?
+  menu      menu?    @relation(fields: [idMenu], references: [id])
+  quantity  Int      @default(0)
+  createdAt DateTime @default(now())
+  updateAt  DateTime @updatedAt
+  note      String   @default("") @db.Text
 }
