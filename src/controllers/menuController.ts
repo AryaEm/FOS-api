@@ -11,7 +11,7 @@ export const getAllMenus = async (req: Request, res: Response) => {
             where: { name: { contains: search?.toString() || "" } }    // Main
         })                                                             //
         return res.json({ //output                
-            status: true,
+            status: 'Nih Menunya',
             data: allMenus,
             massege: 'Menus has retrieved'
         }).status(200)
@@ -45,6 +45,44 @@ export const createMenu = async (req: Request, res: Response) => {
         return res
             .json({
                 status: false,
+                message: `error lee ${error}`
+            })
+            .status(400)
+    }
+}
+
+export const editMenu = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params //Memilih id dari menu yang ingin di edit melalui parameter
+        const { name, price, category, description } = req.body
+
+        const findMenu = await prisma.menu.findFirst({ where: { id: Number(id) } })
+        if (!findMenu) return res
+            .status(200)
+            .json({
+                status: false,
+                message: "Menu tidak ada"
+            })
+
+        const editedMenu = await prisma.menu.update({
+            data: {
+                name: name || findMenu.name,
+                price: price ? Number(price) : findMenu.price,
+                category: category || findMenu.category,
+                description: description || findMenu.description
+            },
+            where: { id: Number(id) }
+        })
+
+        return res.json({
+            status: 'alhamdulillah ga error',
+            data: editedMenu,
+            message: 'Menu sudah diupdate'
+        }).status(200)
+    } catch (error) {
+        return res
+            .json({
+                status: 'yek error',
                 message: `error lee ${error}`
             })
             .status(400)
