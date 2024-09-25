@@ -121,3 +121,40 @@ export const deleteMenu = async (req: Request, res: Response) => {
             .status(400);
     }
 }
+
+export const getTotalMenus = async (req: Request, res: Response) => {
+    try {
+        const total = await prisma.menu.count();
+        return res.json({
+            total: `Menunya ada ${total} kakk`,
+        }).status(200);
+    } catch (error) {
+        return res
+            .json({
+                status: false,
+                message: `duh error ${error}`
+            })
+            .status(400);
+    }
+}
+
+export const getMenuById = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const menu = await prisma.menu.findFirst({ where: { id: Number(id) } });
+        if (!menu) return res.status(404).json({ status: false, message: "Menu tidak ditemukan" });
+
+        return res.json({
+            status: 'Nih Menu',
+            data: menu,
+            message: 'Detail menu berhasil diambil'
+        }).status(200);
+    } catch (error) {
+        return res
+            .json({
+                status: false,
+                message: `Error: ${error}`
+            })
+            .status(400);
+    }
+}
