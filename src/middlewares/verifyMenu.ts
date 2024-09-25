@@ -24,7 +24,6 @@ export const verifyAddMenu = (req: Request, res: Response, next: NextFunction) =
     return next()
 }
 
-
 const editDataSchema = Joi.object({
     name        : Joi.string().optional(),
     price       : Joi.number().min(0).optional(),

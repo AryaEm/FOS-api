@@ -1,6 +1,7 @@
 import { Request, Response } from "express"; //untuk mengimport express
 import { PrismaClient } from "@prisma/client";
 import { v4 as uuidv4 } from "uuid";
+import { request } from "http";
 
 const prisma = new PrismaClient({ errorFormat: "pretty" });
 
@@ -86,5 +87,37 @@ export const editMenu = async (req: Request, res: Response) => {
                 message: `error lee ${error}`
             })
             .status(400)
+    }
+}
+
+export const deleteMenu = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params //Memilih id dari menu yang ingin di hapus melalui parameter
+
+        // Mencari menu berdasarkan id
+        const findMenu = await prisma.menu.findFirst({ where: { id: Number(id) } });
+        if (!findMenu) {
+            return res.status(404).json({
+                status: 'error lee',
+                message: "Menu tidak ditemukan"
+            });
+        }
+
+        // Menghapus menu
+        await prisma.menu.delete({
+            where: { id: Number(id) }
+        });
+
+        return res.json({
+            status: 'Alhamdulillah ga error',
+            message: 'Menu telah dihapus'
+        }).status(200);
+    } catch (error) {
+        return res
+            .json({
+                status: false,
+                message: `Error saat menghapus menu ${error}`
+            })
+            .status(400);
     }
 }
