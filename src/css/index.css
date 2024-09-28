@@ -1,0 +1,10 @@
+ * {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+ }
+ 
+ :root {
+  font-family: sans-serif;
+  --primary: #5A639C;
+}
