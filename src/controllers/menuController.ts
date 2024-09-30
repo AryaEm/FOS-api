@@ -1,7 +1,8 @@
-import { Request, Response } from "express"; //untuk mengimport express
-import { PrismaClient } from "@prisma/client";
-import { v4 as uuidv4 } from "uuid";
-import { request } from "http";
+import { Request, Response } from "express" //untuk mengimport express
+import { PrismaClient } from "@prisma/client"
+import { v4 as uuidv4 } from "uuid"
+import { BASE_URL } from "../global"
+import fs from "fs"
 
 const prisma = new PrismaClient({ errorFormat: "pretty" });
 
@@ -13,8 +14,8 @@ export const getAllMenus = async (req: Request, res: Response) => {
         })                                                             //
         return res.json({ //output                
             status: 'Nih Menunya',
-            data: allMenus,
-            massege: 'Menus has retrieved'
+            menu: allMenus,
+            massage: 'Menus has retrieved'
         }).status(200)
     } catch (error) {
         return res
@@ -90,6 +91,47 @@ export const editMenu = async (req: Request, res: Response) => {
     }
 }
 
+export const changePicture = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params
+
+        const findMenu = await prisma.menu.findFirst({ where: { id: Number(id) } })
+        if (!findMenu) return res
+            .status(200)
+            .json({ 
+                message: 'Menu tidak ada', 
+            })
+
+        // DEFAULT VALUE FILENAME OF SAVED DATA
+        let filename = findMenu.picture
+        if (req.file) {
+            filename = req.file.filename // UPDATE NAMA FILE SESUAI GAMBAR YANG DIUPLOAD
+
+            let path = `${BASE_URL}/../public/menuPicture/${findMenu.picture}` // CEK FOTO LAMA PADA FOLDER
+            let exist = fs.existsSync(path)
+
+            if (exist && findMenu.picture !== ``) fs.unlinkSync(path) //MENGHAPUS FOTO LAMA JIKA ADA
+        }
+
+        const updatePicture = await prisma.menu.update({
+            data: { picture: filename },
+            where: { id: Number(id) }
+        })
+        return res.json({
+            status: 'tru',
+            data: updatePicture,
+            message: 'Picture telah diganti'
+        })
+
+    } catch (error) {
+        return res.json({
+            status: 'fals',
+            error: `${error}`
+        }).status(400)
+    }
+}
+
+
 export const deleteMenu = async (req: Request, res: Response) => {
     try {
         const { id } = req.params //Memilih id dari menu yang ingin di hapus melalui parameter
@@ -102,6 +144,10 @@ export const deleteMenu = async (req: Request, res: Response) => {
                 message: "Menu tidak ditemukan"
             });
         }
+
+        let path = `${BASE_URL}/../public/menuPicture/${findMenu.picture}`
+        let exist = fs.existsSync(path)
+        if (exist && findMenu.picture !== ``) fs.unlinkSync(path)
 
         // Menghapus menu
         await prisma.menu.delete({
@@ -142,7 +188,11 @@ export const getMenuById = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
         const menu = await prisma.menu.findFirst({ where: { id: Number(id) } });
-        if (!menu) return res.status(404).json({ status: false, message: "Menu tidak ditemukan" });
+        if (!menu)
+            return res.status(404).json({
+                status: false,
+                message: "Menu tidak ditemukan"
+            });
 
         return res.json({
             status: 'Nih Menu',
