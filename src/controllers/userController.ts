@@ -1,8 +1,10 @@
 import { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
 import { v4 as uuidv4 } from "uuid";
-import { BASE_URL } from "../global"
+import { BASE_URL, SECRET } from "../global"
 import fs from "fs"
+import md5 from "md5"
+import { sign, TokenExpiredError } from "jsonwebtoken";
 
 const prisma = new PrismaClient({ errorFormat: "pretty" });
 
@@ -47,7 +49,7 @@ export const createUser = async (req: Request, res: Response) => {
 
         //proses save data
         const newUser = await prisma.user.create({
-            data: { uuid, name, email, password, role, profile_picture }
+            data: { uuid, name, email, password: md5(password), role, profile_picture }
         })
 
         return res.json({
@@ -83,7 +85,7 @@ export const editUser = async (req: Request, res: Response) => {
             data: {
                 name: name || findUSer.name,
                 email: email || findUSer.email,
-                password: password || findUSer.password,
+                password: password ? md5(password) : findUSer.password,
                 role: role || findUSer.role,
                 profile_picture: profile_picture || findUSer.profile_picture
             },
@@ -99,7 +101,7 @@ export const editUser = async (req: Request, res: Response) => {
         return res
             .json({
                 status: 'yek error',
-                message: `error lee ${error}`
+                message: 'error lee ${error}'
             })
             .status(400)
     }
@@ -203,3 +205,51 @@ export const getUserById = async (req: Request, res: Response) => {
             .status(400);
     }
 }
+
+export const authentication = async (req: Request, res: Response) => {
+    try {
+        const { email, password } = req.body
+
+        const findUSer = await prisma.user.findFirst({
+            where: { email, password: md5(password) }
+        })
+
+        if (!findUSer)
+            return res
+                .status(200)
+                .json({
+                    status: 'gagal',
+                    logged: false,
+                    message: 'email or password is invalid'
+                })
+
+        let data = {
+            id: findUSer.id,
+            name: findUSer.name,
+            email: findUSer.email,
+            role: findUSer.role,
+        }
+
+        let playload = JSON.stringify(data) // MENYIAPKAN DATA YANG AKAN DIJADIKAN TOKEN
+
+        let token = sign(playload, SECRET || "token") //UNTUK MENGGENERATE TOKEN (SIGN)
+
+        return res
+            .status(200)
+            .json({
+                status: 'tru',
+                logged: 'tru',
+                message: "Login Succes",
+                token
+            })
+
+    } catch (error) {
+        return res
+            .json({
+                status: 'fals',
+                message: `error ${error}`
+            })
+            .status(400)
+    }
+}
+

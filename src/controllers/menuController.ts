@@ -98,8 +98,8 @@ export const changePicture = async (req: Request, res: Response) => {
         const findMenu = await prisma.menu.findFirst({ where: { id: Number(id) } })
         if (!findMenu) return res
             .status(200)
-            .json({ 
-                message: 'Menu tidak ada', 
+            .json({
+                message: 'Menu tidak ada',
             })
 
         // DEFAULT VALUE FILENAME OF SAVED DATA
