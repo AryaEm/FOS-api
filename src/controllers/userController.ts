@@ -4,7 +4,7 @@ import { v4 as uuidv4 } from "uuid";
 import { BASE_URL, SECRET } from "../global"
 import fs from "fs"
 import md5 from "md5"
-import { sign, TokenExpiredError } from "jsonwebtoken";
+import { sign, } from "jsonwebtoken";
 
 const prisma = new PrismaClient({ errorFormat: "pretty" });
 
@@ -28,7 +28,6 @@ export const getAllusers = async (req: Request, res: Response) => {
             .status(400)
     }
 }
-
 
 export const createUser = async (req: Request, res: Response) => {
     try {
