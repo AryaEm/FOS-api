@@ -8,6 +8,7 @@ const addDataSchema = Joi.object({
     category    : Joi.string().valid('Drink', 'Food', 'Snack').required(),
     description : Joi.string().required(),
     picture     : Joi.allow().optional(),
+    user        : Joi.required()
 })
 
 export const verifyAddMenu = (req: Request, res: Response, next: NextFunction) => {
@@ -30,6 +31,7 @@ const editDataSchema = Joi.object({
     category    : Joi.string().valid('Drink', 'Food', 'Snack').optional(),
     description : Joi.string().optional(),
     picture     : Joi.allow().optional(),
+    user        : Joi.required()
 })
 
 export const verifyeditMenu = (req: Request, res: Response, next: NextFunction) => {
