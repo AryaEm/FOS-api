@@ -100,7 +100,7 @@ export const editUser = async (req: Request, res: Response) => {
         return res
             .json({
                 status: 'yek error',
-                message: 'error lee ${error}'
+                message: `error lee ${error}`
             })
             .status(400)
     }

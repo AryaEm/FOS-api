@@ -10,7 +10,7 @@ app.use(cors())
 
 app.use('/menu', MenuRoute)
 app.use('/user', UserRoute)
-app.use('/transaksi', OrderRoute)
+app.use('/order', OrderRoute)
 
 app.listen(PORT, () => {
     console.log(`[server]: Server is running at http://localhost:${PORT}`)
