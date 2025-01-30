@@ -3,12 +3,12 @@ import Joi from 'joi'
 
 //Membuat schema sata menambah data menu
 const addDataSchema = Joi.object({
-    name        : Joi.string().required(),
-    price       : Joi.number().min(0).required(),
-    category    : Joi.string().valid('Drink', 'Food', 'Snack').required(),
-    description : Joi.string().required(),
-    picture     : Joi.allow().optional(),
-    user        : Joi.required()
+    name: Joi.string().required(),
+    price: Joi.number().min(0).required(),
+    category: Joi.string().valid('Drink', 'Food', 'Snack').required(),
+    description: Joi.string().required(),
+    picture: Joi.allow().optional(),
+    // user        : Joi.required()
 })
 
 export const verifyAddMenu = (req: Request, res: Response, next: NextFunction) => {
@@ -26,12 +26,12 @@ export const verifyAddMenu = (req: Request, res: Response, next: NextFunction) =
 }
 
 const editDataSchema = Joi.object({
-    name        : Joi.string().optional(),
-    price       : Joi.number().min(0).optional(),
-    category    : Joi.string().valid('Drink', 'Food', 'Snack').optional(),
-    description : Joi.string().optional(),
-    picture     : Joi.allow().optional(),
-    user        : Joi.required()
+    name: Joi.string().optional(),
+    price: Joi.number().min(0).optional(),
+    category: Joi.string().valid('Drink', 'Food', 'Snack').optional(),
+    description: Joi.string().optional(),
+    picture: Joi.allow().optional(),
+    // user        : Joi.required()
 })
 
 export const verifyeditMenu = (req: Request, res: Response, next: NextFunction) => {
@@ -40,7 +40,7 @@ export const verifyeditMenu = (req: Request, res: Response, next: NextFunction) 
 
     if (error) {
         //response jika ada error
-        return res.status(400).json({
+        return res.status(200).json({
             status: false,
             message: error.details.map(it => it.message).join()
         })

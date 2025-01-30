@@ -8,20 +8,29 @@ const prisma = new PrismaClient({ errorFormat: "pretty" });
 
 export const getAllMenus = async (req: Request, res: Response) => {
     try {
-        const { search } = req.query //input
-        const allMenus = await prisma.menu.findMany({                  //
-            where: { name: { contains: search?.toString() || "" } }    // Main
-        })                                                             //
-        return res.json({ //output                
-            status: 'Nih Menunya',
-            menu: allMenus,
-            massage: 'Menus has retrieved'
+        /** get requested data (data has been sent from request) */
+        const { search } = req.query
+
+        /** process to get menu, contains means search name of menu based on sent keyword */
+        const allMenus = await prisma.menu.findMany({
+            where: { name: { contains: search?.toString() || "" } }
+        })
+
+        // const formattedMenus = allMenus.map(menu => ({
+        //     ...menu,
+        //     price: menu.price.toString().slice(0,2)
+        // }));
+
+        return res.json({
+            status: true,
+            data: allMenus,
+            message: `Menus has retrieved`
         }).status(200)
     } catch (error) {
         return res
             .json({
                 status: false,
-                message: `Error bang ${error}`
+                message: `There is an error. ${error}`
             })
             .status(400)
     }
@@ -33,13 +42,16 @@ export const createMenu = async (req: Request, res: Response) => {
         const { name, price, category, description } = req.body
         const uuid = uuidv4()
 
+        let filename = ""
+        if (req.file) filename = req.file.filename
+
         //proses save data
         const newMenu = await prisma.menu.create({
-            data: { uuid, name, price: Number(price), category, description }
+            data: { uuid, name, price: Number(price), category, description, picture: filename }
         })
 
         return res.json({
-            status: 'Alhamdulillah ga error',
+            status: true,
             data: newMenu,
             message: 'New menu has created'
         }).status(200)
@@ -66,43 +78,6 @@ export const editMenu = async (req: Request, res: Response) => {
                 message: "Menu tidak ada"
             })
 
-        const editedMenu = await prisma.menu.update({
-            data: {
-                name: name || findMenu.name,
-                price: price ? Number(price) : findMenu.price,
-                category: category || findMenu.category,
-                description: description || findMenu.description
-            },
-            where: { id: Number(id) }
-        })
-
-        return res.json({
-            status: 'alhamdulillah ga error',
-            data: editedMenu,
-            message: 'Menu sudah diupdate'
-        }).status(200)
-    } catch (error) {
-        return res
-            .json({
-                status: 'yek error',
-                message: `error lee ${error}`
-            })
-            .status(400)
-    }
-}
-
-export const changePicture = async (req: Request, res: Response) => {
-    try {
-        const { id } = req.params
-
-        const findMenu = await prisma.menu.findFirst({ where: { id: Number(id) } })
-        if (!findMenu) return res
-            .status(200)
-            .json({
-                message: 'Menu tidak ada',
-            })
-
-        // DEFAULT VALUE FILENAME OF SAVED DATA
         let filename = findMenu.picture
         if (req.file) {
             filename = req.file.filename // UPDATE NAMA FILE SESUAI GAMBAR YANG DIUPLOAD
@@ -113,23 +88,71 @@ export const changePicture = async (req: Request, res: Response) => {
             if (exist && findMenu.picture !== ``) fs.unlinkSync(path) //MENGHAPUS FOTO LAMA JIKA ADA
         }
 
-        const updatePicture = await prisma.menu.update({
-            data: { picture: filename },
+        const editedMenu = await prisma.menu.update({
+            data: {
+                name: name || findMenu.name,
+                price: price ? Number(price) : findMenu.price,
+                category: category || findMenu.category,
+                description: description || findMenu.description,
+                picture: filename
+            },
             where: { id: Number(id) }
         })
-        return res.json({
-            status: 'tru',
-            data: updatePicture,
-            message: 'Picture telah diganti'
-        })
 
-    } catch (error) {
         return res.json({
-            status: 'fals',
-            error: `${error}`
-        }).status(400)
+            status: true,
+            data: editedMenu,
+            message: 'Menu sudah diupdate'
+        }).status(200)
+    } catch (error) {
+        return res
+            .json({
+                status: false,
+                message: `error lee ${error}`
+            })
+            .status(400)
     }
 }
+
+// export const changePicture = async (req: Request, res: Response) => {
+//     try {
+//         const { id } = req.params
+
+//         const findMenu = await prisma.menu.findFirst({ where: { id: Number(id) } })
+//         if (!findMenu) return res
+//             .status(200)
+//             .json({
+//                 message: 'Menu tidak ada',
+//             })
+
+//         // DEFAULT VALUE FILENAME OF SAVED DATA
+//         let filename = findMenu.picture
+//         if (req.file) {
+//             filename = req.file.filename // UPDATE NAMA FILE SESUAI GAMBAR YANG DIUPLOAD
+
+//             let path = `${BASE_URL}/../public/menuPicture/${findMenu.picture}` // CEK FOTO LAMA PADA FOLDER
+//             let exist = fs.existsSync(path)
+
+//             if (exist && findMenu.picture !== ``) fs.unlinkSync(path) //MENGHAPUS FOTO LAMA JIKA ADA
+//         }
+
+//         const updatePicture = await prisma.menu.update({
+//             data: { picture: filename },
+//             where: { id: Number(id) }
+//         })
+//         return res.json({
+//             status: 'tru',
+//             data: updatePicture,
+//             message: 'Picture telah diganti'
+//         })
+
+//     } catch (error) {
+//         return res.json({
+//             status: 'fals',
+//             error: `${error}`
+//         }).status(400)
+//     }
+// }
 
 
 export const deleteMenu = async (req: Request, res: Response) => {
@@ -140,7 +163,7 @@ export const deleteMenu = async (req: Request, res: Response) => {
         const findMenu = await prisma.menu.findFirst({ where: { id: Number(id) } });
         if (!findMenu) {
             return res.status(404).json({
-                status: 'error lee',
+                status: false,
                 message: "Menu tidak ditemukan"
             });
         }
@@ -155,7 +178,7 @@ export const deleteMenu = async (req: Request, res: Response) => {
         });
 
         return res.json({
-            status: 'Alhamdulillah ga error',
+            status: true,
             message: 'Menu telah dihapus'
         }).status(200);
     } catch (error) {
@@ -172,7 +195,7 @@ export const getTotalMenus = async (req: Request, res: Response) => {
     try {
         const total = await prisma.menu.count();
         return res.json({
-            total: `Menunya ada ${total} kakk`,
+            total: `Menunya ada ${total}`,
         }).status(200);
     } catch (error) {
         return res
@@ -195,7 +218,7 @@ export const getMenuById = async (req: Request, res: Response) => {
             });
 
         return res.json({
-            status: 'Nih Menu',
+            status: true,
             data: menu,
             message: 'Detail menu berhasil diambil'
         }).status(200);

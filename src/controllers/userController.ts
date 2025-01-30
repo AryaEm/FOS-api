@@ -15,14 +15,14 @@ export const getAllusers = async (req: Request, res: Response) => {
             where: { name: { contains: search?.toString() || "" } }
         })
         return res.json({
-            status: 'wow',
+            status: true,
             user: allUsers,
             massage: 'Users has retrieved'
         }).status(200)
     } catch (error) {
         return res
             .json({
-                status: 'error le',
+                status: false,
                 message: `${error}`
             })
             .status(400)
@@ -52,7 +52,7 @@ export const createUser = async (req: Request, res: Response) => {
         })
 
         return res.json({
-            status: 'Creating User',
+            status: true,
             user: newUser,
             message: 'New user has created'
         }).status(200)
@@ -92,14 +92,14 @@ export const editUser = async (req: Request, res: Response) => {
         })
 
         return res.json({
-            status: 'alhamdulillah ga error',
+            status: true,
             user: editedUser,
             message: 'user telah diupdate'
         }).status(200)
     } catch (error) {
         return res
             .json({
-                status: 'yek error',
+                status: false,
                 message: `error lee ${error}`
             })
             .status(400)
@@ -132,14 +132,14 @@ export const changePicture = async (req: Request, res: Response) => {
             where: { id: Number(id) }
         })
         return res.json({
-            status: 'tru',
+            status: true,
             data: updatePicture,
             message: 'Picture telah diganti'
         })
 
     } catch (error) {
         return res.json({
-            status: 'fals',
+            status: false,
             error: `${error}`
         }).status(400)
     }
@@ -153,7 +153,7 @@ export const deleteUser = async (req: Request, res: Response) => {
         const findUser = await prisma.user.findFirst({ where: { id: Number(id) } });
         if (!findUser) {
             return res.status(404).json({
-                status: 'error lee',
+                status: false,
                 message: "user tidak ditemukan"
             });
         }
@@ -168,13 +168,13 @@ export const deleteUser = async (req: Request, res: Response) => {
         });
 
         return res.json({
-            status: 'Alhamdulillah ga error',
+            status: true,
             message: 'User telah dihapus'
         }).status(200);
     } catch (error) {
         return res
             .json({
-                status: 'Error saat menghapus user',
+                status: false,
                 message: `${error}`
             })
             .status(400);
@@ -191,7 +191,7 @@ export const getUserById = async (req: Request, res: Response) => {
             });
 
         return res.json({
-            status: 'Nih',
+            status:true,
             user: user,
             message: 'Detail User berhasil diambil'
         }).status(200);
@@ -217,7 +217,7 @@ export const authentication = async (req: Request, res: Response) => {
             return res
                 .status(200)
                 .json({
-                    status: 'gagal',
+                    status: false,
                     logged: false,
                     message: 'email or password is invalid'
                 })
@@ -236,16 +236,17 @@ export const authentication = async (req: Request, res: Response) => {
         return res
             .status(200)
             .json({
-                status: 'tru',
-                logged: 'tru',
+                status: true,
+                logged: true,
                 message: "Login Succes",
-                token
+                token,
+                data: data
             })
 
     } catch (error) {
         return res
             .json({
-                status: 'fals',
+                status: false,
                 message: `error ${error}`
             })
             .status(400)
