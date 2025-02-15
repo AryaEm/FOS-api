@@ -17,7 +17,7 @@ export const verifyAddMenu = (req: Request, res: Response, next: NextFunction) =
 
     if (error) {
         //response jika ada error
-        return res.status(400).json({
+        return res.status(200).json({
             status: false,
             message: error.details.map(it => it.message).join()
         })

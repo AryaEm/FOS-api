@@ -1,8 +1,9 @@
 import { Request, Response } from "express" //untuk mengimport express
-import { PrismaClient } from "@prisma/client"
+import { menu, PrismaClient } from "@prisma/client"
 import { v4 as uuidv4 } from "uuid"
 import { BASE_URL } from "../global"
 import fs from "fs"
+import { Category } from "@prisma/client";
 
 const prisma = new PrismaClient({ errorFormat: "pretty" });
 
@@ -35,6 +36,29 @@ export const getAllMenus = async (req: Request, res: Response) => {
             .status(400)
     }
 }
+
+// export const getMenuCategories = async (req: Request, res: Response) => {
+//     try {
+//         // Ambil daftar kategori menu yang unik dari database
+//         const categories = await prisma.menu.findMany({
+//             select: { category: true }
+//         });
+
+//         // Filter unique category
+//         const uniqueCategories = [...new Set(categories.map(item => item.category))];
+
+//         return res.status(200).json({
+//             status: true,
+//             data: uniqueCategories,
+//             message: "Menu categories have been retrieved"
+//         });
+//     } catch (error) {
+//         return res.status(500).json({
+//             status: false,
+//             message: `There is an error. ${error}`
+//         });
+//     }
+// };
 
 export const createMenu = async (req: Request, res: Response) => {
     try {
@@ -207,27 +231,89 @@ export const getTotalMenus = async (req: Request, res: Response) => {
     }
 }
 
-export const getMenuById = async (req: Request, res: Response) => {
-    try {
-        const { id } = req.params;
-        const menu = await prisma.menu.findFirst({ where: { id: Number(id) } });
-        if (!menu)
-            return res.status(404).json({
-                status: false,
-                message: "Menu tidak ditemukan"
-            });
+// export const getMenuById = async (req: Request, res: Response) => {
+//     try {
+//         const { id } = req.params;
+//         const menuId = parseInt(id, 10); // Konversi id ke integer
 
-        return res.json({
+//         if (isNaN(menuId)) {
+//             return res.status(400).json({ status: false, message: "Invalid menu ID" });
+//         }
+
+//         const menu = await prisma.menu.findFirst({
+//             where: { id: menuId }, // Pastikan id dalam bentuk integer
+//         });
+
+//         if (!menu) {
+//             return res.status(404).json({ status: false, message: "Menu not found" });
+//         }
+
+//         res.status(200).json({ status: true, data: menu });
+//     } catch (error) {
+//         console.error(error);
+//         res.status(500).json({ status: false, message: "Internal Server Error" });
+//     }
+// };
+
+
+export const getMostOrderedMenu = async (req: Request, res: Response) => {
+    try {
+        // Ambil semua pesanan dengan status "Done"
+        const completedOrders = await prisma.order.findMany({
+            where: { status: "Done" },
+            include: { orderList: { include: { menu: true } } },
+        });
+
+        // Hitung jumlah pembelian tiap menu
+        // const menuCount = {};
+        const menuCount: Record<number, { menu: menu; totalOrdered: number }> = {};
+        completedOrders.forEach(order => {
+            order.orderList.forEach(orderItem => {
+                if (orderItem.menu) {
+                    const menuId = orderItem.menu.id;
+                    if (!menuCount[menuId]) {
+                        menuCount[menuId] = {
+                            menu: orderItem.menu,
+                            totalOrdered: 0,
+                        };
+                    }
+                    menuCount[menuId].totalOrdered += orderItem.quantity;
+                }
+            });
+        });
+
+        // Urutkan berdasarkan jumlah terbanyak
+        const sortedMenus = Object.values(menuCount)
+            .sort((a, b) => b.totalOrdered - a.totalOrdered);
+
+        res.status(200).json({
             status: true,
-            data: menu,
-            message: 'Detail menu berhasil diambil'
-        }).status(200);
+            data: sortedMenus,
+            message: "Most ordered menu retrieved successfully"
+        });
     } catch (error) {
-        return res
-            .json({
-                status: false,
-                message: `Error: ${error}`
-            })
-            .status(400);
+        console.error(error);
+        res.status(500).json({ status: false, message: "Internal Server Error" });
     }
-}
+};
+
+
+export const getMenuCategories = async (req: Request, res: Response) => {
+    try {
+        // Ambil daftar kategori unik dari tabel menu
+        const categories = await prisma.menu.findMany({
+            select: { category: true }, // Ambil hanya kolom kategori
+            distinct: ["category"], // Pastikan tidak ada kategori yang duplikat
+        });
+
+        res.status(200).json({
+            status: true,
+            menu_categories: categories,
+            message: "Menu categories retrieved successfully",
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ status: false, message: "Internal Server Error" });
+    }
+};
+

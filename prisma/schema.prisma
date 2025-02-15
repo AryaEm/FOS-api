@@ -57,7 +57,7 @@ model menu {
   picture     String       @default("")
   description String       @default("") @db.Text
   createdAt   DateTime     @default(now())
-  updateAt    DateTime     @updatedAt
+  updateAt    DateTime     @updatedAt 
   orderList   Order_List[]
 }
 
@@ -68,23 +68,23 @@ model Order {
   table_number   String         @default("")
   total_price    Int            @default(0)
   payment_method Payment_Method @default(Cash)
-  idUser         Int?
-  user           User?          @relation(fields: [idUser], references: [id])
   status         Status         @default(New)
   createdAt      DateTime       @default(now())
   updateAt       DateTime       @updatedAt
   orderList      Order_List[]
+  user           User?          @relation(fields: [idUser], references: [id])
+  idUser         Int?
 }
 
 model Order_List {
   id        Int      @id @default(autoincrement())
   uuid      String   @default("")
-  idOrder   Int?
-  order     Order?   @relation(fields: [idOrder], references: [id])
-  idMenu    Int?
-  menu      menu?    @relation(fields: [idMenu], references: [id])
   quantity  Int      @default(0)
+  note      String   @default("") @db.Text
   createdAt DateTime @default(now())
   updateAt  DateTime @updatedAt
-  note      String   @default("") @db.Text
+  menu      menu?    @relation(fields: [idMenu], references: [id])
+  idMenu    Int?
+  order     Order?   @relation(fields: [idOrder], references: [id])
+  idOrder   Int?
 }

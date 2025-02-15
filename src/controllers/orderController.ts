@@ -78,52 +78,55 @@ export const getAllOrders = async (request: Request, response: Response) => {
 };
 
 
-export const createOrder = async (request: Request, response: Response) => {
+export const createOrder = async (req: Request, res: Response) => {
     try {
-        const { customer, table_number, payment_method, status, order_list } = request.body
-        const user = request.body.user
-        const uuid = uuidv4()
+        const { customer, table_number, payment_method, status, orderlists } = req.body;
+        
+        if (!customer || !table_number || !payment_method || !status || !orderlists || !orderlists.length) {
+            return res.status(400).json({ status: false, message: "All fields are required" });
+        }
 
-        let total_price = 0
-        for (let index = 0; index < order_list.length; index++) {
-            const { menuId } = order_list[index]
-            const detailMenu = await prisma.menu.findFirst({
-                where: {
-                    id: menuId
-                }
-            })
-            if (!detailMenu) return response
-                .status(200).json({ status: false, message: `Menu with id ${menuId} is not found` })
-            total_price += (detailMenu.price * order_list[index].quantity)
+        let total_price = 0;
+        const orderItems = [];
+
+        for (const order of orderlists) {
+            const menu = await prisma.menu.findUnique({ where: { id: order.menuId } });
+            if (!menu) {
+                return res.status(404).json({ status: false, message: `Menu with id ${order.menuId} not found` });
+            }
+            total_price += menu.price * order.quantity;
+            orderItems.push({
+                uuid: uuidv4(),
+                quantity: order.quantity,
+                note: order.note,
+                idMenu: order.menuId,
+            });
         }
 
         const newOrder = await prisma.order.create({
-            data: { uuid, customer, table_number, total_price, payment_method, status, idUser: user.id }
-        })
+            data: {
+                uuid: uuidv4(),
+                customer,
+                table_number,
+                total_price,
+                payment_method,
+                status,
+                orderList: { create: orderItems },
+            },
+            include: { orderList: true },
+        });
 
-        for (let index = 0; index < order_list.length; index++) {
-            const uuid = uuidv4()
-            const { menuId, quantity, note } = order_list[index]
-            await prisma.order_List.create({
-                data: {
-                    uuid, idOrder: newOrder.id, idMenu: Number(menuId), quantity: Number(quantity), note
-                }
-            })
-        }
-        return response.json({
+        res.status(201).json({
             status: true,
             data: newOrder,
-            message: `New Order has created`
-        }).status(200)
+            message: "New Order has been created",
+        });
     } catch (error) {
-        return response
-            .json({
-                status: false,
-                message: `There is an error. ${error}`
-            })
-            .status(400)
+        console.error(error);
+        res.status(500).json({ status: false, message: "Internal Server Error" });
     }
-}
+};
+
 
 export const updateStatusOrder = async (req: Request, res: Response) => {
     try {

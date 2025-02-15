@@ -1,21 +1,21 @@
 import { NextFunction, Request, Response } from "express";
 import Joi from 'joi'
 
-//Membuat schema sata menambah data menu
+//Membuat schema sata menambah data 
 const addDataSchema = Joi.object({
-    name            : Joi.string().required(),
-    email           : Joi.string().email().required(),
-    password        : Joi.string().min(8).required(),
-    role            : Joi.string().valid('Manager', 'Cashier').required(),
-    profile_picture : Joi.allow().optional
+    name: Joi.string().required(),
+    email: Joi.string().email().required(),
+    password: Joi.string().min(8).required(),
+    role: Joi.string().valid('Manager', 'Cashier').required(),
+    profile_picture: Joi.allow().optional()
 })
 
 const editDataSchema = Joi.object({
-    name            : Joi.string().optional(),
-    email           : Joi.string().email().optional(),
-    password        : Joi.string().min(8).optional(),
-    role            : Joi.string().valid('Manager', 'Cashier').optional(),
-    profile_picture : Joi.allow().optional
+    name: Joi.string().optional(),
+    email: Joi.string().email().optional(),
+    password: Joi.string().min(8).optional(),
+    role: Joi.string().valid('Manager', 'Cashier').optional(),
+    profile_picture: Joi.allow().optional()
 })
 
 export const verifyAddUser = (req: Request, res: Response, next: NextFunction) => {
@@ -24,7 +24,7 @@ export const verifyAddUser = (req: Request, res: Response, next: NextFunction) =
 
     if (error) {
         //response jika ada error
-        return res.status(400).json({
+        return res.status(200).json({
             status: false,
             message: error.details.map(it => it.message).join()
         })
@@ -38,7 +38,7 @@ export const verifyEditUser = (req: Request, res: Response, next: NextFunction) 
 
     if (error) {
         //response jika ada error
-        return res.status(400).json({
+        return res.status(200).json({
             status: false,
             message: error.details.map(it => it.message).join()
         })

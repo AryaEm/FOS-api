@@ -5,6 +5,7 @@ import { BASE_URL, SECRET } from "../global"
 import fs from "fs"
 import md5 from "md5"
 import { sign, } from "jsonwebtoken";
+import path from "path";
 
 const prisma = new PrismaClient({ errorFormat: "pretty" });
 
@@ -16,7 +17,7 @@ export const getAllusers = async (req: Request, res: Response) => {
         })
         return res.json({
             status: true,
-            user: allUsers,
+            data: allUsers,
             massage: 'Users has retrieved'
         }).status(200)
     } catch (error) {
@@ -32,7 +33,7 @@ export const getAllusers = async (req: Request, res: Response) => {
 export const createUser = async (req: Request, res: Response) => {
     try {
         //mengambil data
-        const { name, email, password, role, profile_picture } = req.body
+        const { name, email, password, role } = req.body
         const uuid = uuidv4()
 
         const cekEmail = await prisma.user.findUnique({
@@ -48,7 +49,7 @@ export const createUser = async (req: Request, res: Response) => {
 
         //proses save data
         const newUser = await prisma.user.create({
-            data: { uuid, name, email, password: md5(password), role, profile_picture }
+            data: { uuid, name, email, password: md5(password), role }
         })
 
         return res.json({
@@ -72,21 +73,33 @@ export const editUser = async (req: Request, res: Response) => {
         const { id } = req.params
         const { name, email, password, role, profile_picture } = req.body
 
-        const findUSer = await prisma.user.findFirst({ where: { id: Number(id) } })
-        if (!findUSer) return res
+        const findUser = await prisma.user.findFirst({ where: { id: Number(id) } })
+        if (!findUser) return res
             .status(200)
             .json({
                 status: false,
                 message: "User tidak ada"
             })
 
+        let filename = findUser.profile_picture
+        if (req.file) {
+            filename = req.file.filename // Ambil nama file yang baru diunggah
+
+            let oldPath = path.join(__dirname, `../public/userPicture/${findUser.profile_picture}`)
+            let exist = fs.existsSync(oldPath)
+
+            if (exist && findUser.profile_picture) {
+                fs.unlinkSync(oldPath) // Hapus foto lama jika ada
+            }
+        }
+
         const editedUser = await prisma.user.update({
             data: {
-                name: name || findUSer.name,
-                email: email || findUSer.email,
-                password: password ? md5(password) : findUSer.password,
-                role: role || findUSer.role,
-                profile_picture: profile_picture || findUSer.profile_picture
+                name: name || findUser.name,
+                email: email || findUser.email,
+                password: password ? md5(password) : findUser.password,
+                role: role || findUser.role,
+                profile_picture: filename
             },
             where: { id: Number(id) }
         })
@@ -191,7 +204,7 @@ export const getUserById = async (req: Request, res: Response) => {
             });
 
         return res.json({
-            status:true,
+            status: true,
             user: user,
             message: 'Detail User berhasil diambil'
         }).status(200);
@@ -204,6 +217,14 @@ export const getUserById = async (req: Request, res: Response) => {
             .status(400);
     }
 }
+
+// export const Resetpassword = async (req: Request, res: Response) => {
+//     try {
+//         cons
+//     } catch (error) {
+
+//     }
+// }
 
 export const authentication = async (req: Request, res: Response) => {
     try {
@@ -227,6 +248,7 @@ export const authentication = async (req: Request, res: Response) => {
             name: findUSer.name,
             email: findUSer.email,
             role: findUSer.role,
+            profile_picture: findUSer.profile_picture,
         }
 
         let playload = JSON.stringify(data) // MENYIAPKAN DATA YANG AKAN DIJADIKAN TOKEN

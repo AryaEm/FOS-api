@@ -12,6 +12,7 @@ const app = express()
 app.use(cors())
 app.use(express.json())
 
+
 const swaggerOptions = {
     swaggerDefinition: {
         openapi: '3.0.0',
