@@ -6,8 +6,8 @@ import { verifyRole, verifyToken } from "../middlewares/authorization"
 
 const app = express()
 app.use(express.json())
-app.get(`/`, [verifyToken, verifyRole(["Cashier","Manager"])], getAllOrders)
-app.post(`/`, [verifyAddOrder], createOrder)
+app.get(`/`, [verifyToken, verifyRole(["Cashier", "Manager"])], getAllOrders)
+app.post(`/`, [verifyAddOrder, verifyToken, verifyRole(["Cashier"])], createOrder)
 app.put(`/:id`, [verifyToken, verifyRole(["Cashier"]), verifyEditStatus], updateStatusOrder)
 app.delete(`/:id`, [verifyToken, verifyRole(["Manager"])], deleteOrder)
 

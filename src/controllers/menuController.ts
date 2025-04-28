@@ -218,18 +218,17 @@ export const deleteMenu = async (req: Request, res: Response) => {
 export const getTotalMenus = async (req: Request, res: Response) => {
     try {
         const total = await prisma.menu.count();
-        return res.json({
-            total: `Menunya ada ${total}`,
-        }).status(200);
+        return res.status(200).json({
+            status: true,
+            total_menu: [{ total }], // Wrap in an array of objects
+        });
     } catch (error) {
-        return res
-            .json({
-                status: false,
-                message: `duh error ${error}`
-            })
-            .status(400);
+        return res.status(400).json({
+            status: false,
+            message: `duh error ${error}`
+        });
     }
-}
+};
 
 // export const getMenuById = async (req: Request, res: Response) => {
 //     try {
@@ -258,6 +257,9 @@ export const getTotalMenus = async (req: Request, res: Response) => {
 
 export const getMostOrderedMenu = async (req: Request, res: Response) => {
     try {
+        // Ambil semua menu dari database
+        const allMenus = await prisma.menu.findMany();
+
         // Ambil semua pesanan dengan status "Done"
         const completedOrders = await prisma.order.findMany({
             where: { status: "Done" },
@@ -265,7 +267,6 @@ export const getMostOrderedMenu = async (req: Request, res: Response) => {
         });
 
         // Hitung jumlah pembelian tiap menu
-        // const menuCount = {};
         const menuCount: Record<number, { menu: menu; totalOrdered: number }> = {};
         completedOrders.forEach(order => {
             order.orderList.forEach(orderItem => {
@@ -282,13 +283,18 @@ export const getMostOrderedMenu = async (req: Request, res: Response) => {
             });
         });
 
+        // Gabungkan semua menu dengan data pesanan
+        const result = allMenus.map(menu => ({
+            menu,
+            totalOrdered: menuCount[menu.id]?.totalOrdered || 0,
+        }));
+
         // Urutkan berdasarkan jumlah terbanyak
-        const sortedMenus = Object.values(menuCount)
-            .sort((a, b) => b.totalOrdered - a.totalOrdered);
+        result.sort((a, b) => b.totalOrdered - a.totalOrdered);
 
         res.status(200).json({
             status: true,
-            data: sortedMenus,
+            data: result,
             message: "Most ordered menu retrieved successfully"
         });
     } catch (error) {
@@ -296,6 +302,56 @@ export const getMostOrderedMenu = async (req: Request, res: Response) => {
         res.status(500).json({ status: false, message: "Internal Server Error" });
     }
 };
+
+
+export const getTopThreeMostOrderedMenu = async (req: Request, res: Response) => {
+    try {
+        // Ambil semua menu dari database
+        const allMenus = await prisma.menu.findMany();
+
+        // Ambil semua pesanan dengan status "Done"
+        const completedOrders = await prisma.order.findMany({
+            where: { status: "Done" },
+            include: { orderList: { include: { menu: true } } },
+        });
+
+        // Hitung jumlah pembelian tiap menu
+        const menuCount: Record<number, { menu: menu; totalOrdered: number }> = {};
+        completedOrders.forEach(order => {
+            order.orderList.forEach(orderItem => {
+                if (orderItem.menu) {
+                    const menuId = orderItem.menu.id;
+                    if (!menuCount[menuId]) {
+                        menuCount[menuId] = {
+                            menu: orderItem.menu,
+                            totalOrdered: 0,
+                        };
+                    }
+                    menuCount[menuId].totalOrdered += orderItem.quantity;
+                }
+            });
+        });
+
+        // Gabungkan semua menu dengan data pesanan
+        const result = allMenus.map(menu => ({
+            menu,
+            totalOrdered: menuCount[menu.id]?.totalOrdered || 0,
+        }));
+
+        // Urutkan berdasarkan jumlah terbanyak dan ambil 3 teratas
+        const topThreeMenus = result.sort((a, b) => b.totalOrdered - a.totalOrdered).slice(0, 3);
+
+        res.status(200).json({
+            status: true,
+            data: topThreeMenus,
+            message: "Top 3 most ordered menu retrieved successfully"
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ status: false, message: "Internal Server Error" });
+    }
+};
+
 
 
 export const getMenuCategories = async (req: Request, res: Response) => {

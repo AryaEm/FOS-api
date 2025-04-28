@@ -36,7 +36,7 @@ export const createUser = async (req: Request, res: Response) => {
         const { name, email, password, role } = req.body
         const uuid = uuidv4()
 
-        const cekEmail = await prisma.user.findUnique({
+        const cekEmail = await prisma.user.findUnique({ 
             where: { email },
         });
 

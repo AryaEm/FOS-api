@@ -3,15 +3,15 @@ import Joi from "joi"
 
 const orderListSchema = Joi.object({
     menuId: Joi.number().required(),
-    quantity: Joi.number().required(),
-    note: Joi.string().optional()
+    quantity: Joi.number().min(1).required(),
+    note: Joi.string().allow("").optional()
 })
 
 const addDataSchema = Joi.object({
     customer: Joi.string().required(),
     table_number: Joi.number().min(0).required(),
     payment_method: Joi.string().valid("Cash", "Qris").required(),
-    status: Joi.string().valid("New", "paid", "Done").required(),
+    status: Joi.string().valid("New", "paid", "Done").optional(),
     idUser: Joi.number().optional(),
     orderlists: Joi.array().items(orderListSchema).min(1).required(),
     user: Joi.optional()

@@ -18,7 +18,7 @@ export const verifyToken = (req: Request, res: Response, next: NextFunction) => 
         })
     }
 
-    try {
+    try {  
         const secretKey = SECRET || ''
         const decoded = verify(token, secretKey)
         req.body.user = decoded as JwtPayload

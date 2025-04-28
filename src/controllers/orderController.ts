@@ -59,30 +59,47 @@ export const getAllOrders = async (request: Request, response: Response) => {
         const allOrders = await prisma.order.findMany({
             where: filterConditions,
             orderBy: { createdAt: "desc" },
-            include: { orderList: true }
+            include: {
+                orderList: {
+                    include: {
+                        menu: {
+                            select: {
+                                name: true // Tambahkan ini untuk hanya mengambil nama menu
+                            }
+                        }
+                    }
+                }
+            }
         });
 
-        return response.json({
+        const modifiedOrders = allOrders.map(order => ({
+            ...order,
+            orderList: order.orderList.map(({ menu, ...item }) => ({
+                ...item,
+                Item: menu?.name || null // Tambahkan properti Item
+            }))
+        }));
+
+        return response.status(200).json({
             status: true,
-            data: allOrders,
+            data: modifiedOrders,
             message: `Order list has been retrieved`
-        }).status(200);
+        });
     } catch (error) {
-        return response
-            .json({
-                status: false,
-                message: `There is an error. ${error}`
-            })
-            .status(400);
+        return response.status(400).json({
+            status: false,
+            message: `There is an error. ${error}`
+        });
     }
 };
+
 
 
 export const createOrder = async (req: Request, res: Response) => {
     try {
         const { customer, table_number, payment_method, status, orderlists } = req.body;
-        
-        if (!customer || !table_number || !payment_method || !status || !orderlists || !orderlists.length) {
+
+        if (!customer || !table_number || !payment_method || !orderlists || !orderlists.length) {
             return res.status(400).json({ status: false, message: "All fields are required" });
         }
 
@@ -110,7 +127,7 @@ export const createOrder = async (req: Request, res: Response) => {
                 table_number,
                 total_price,
                 payment_method,
-                status,
+                status: "New",
                 orderList: { create: orderItems },
             },
             include: { orderList: true },
